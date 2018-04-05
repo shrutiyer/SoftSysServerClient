@@ -10,7 +10,7 @@ As part of this project we want to learn about different layers of the network a
 We were inspired to research and work on this project because of a previous SoftSys project where the team built an [HTTP Server in C](https://matthewruehle.github.io/SoftSysQuestingQuail/). 
 
 We found a few resources to help us get started with socket programming using C libraries. "Beej's Guide to Network Programming" by Brian Hall contains resources to understand networking concepts and implementing them using C. 
-[This](thttps://github.com/angrave/SystemProgramming/wiki/Networking,-Part-4:-Building-a-simple-TCP-Server) Github repo contains tutorials and examples for a TCP server. 
+[This](https://github.com/angrave/SystemProgramming/wiki/Networking,-Part-4:-Building-a-simple-TCP-Server) Github repo contains tutorials and examples for a TCP server. 
 
 We will also use Chapter 11 of Head First C which talks about sockets and networking.
 
