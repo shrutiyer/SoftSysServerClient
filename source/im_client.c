@@ -2,7 +2,7 @@
 #include<sys/types.h>
 #include<sys/socket.h>
 #include<netinet/in.h>
-#include<netdb.h>  
+#include<netdb.h>
 #include<unistd.h>
 #include<string.h>
 #include<stdlib.h>
@@ -22,15 +22,15 @@ int main(void)
     memset((char*)&server_addr, 0, sizeof(server_addr));
 
     server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(10000);
+    server_addr.sin_port = htons(10001);
 
-    bind(clientSocket, (struct sockaddr*)&server_addr, sizeof(struct sockaddr)); 
+    bind(clientSocket, (struct sockaddr*)&server_addr, sizeof(struct sockaddr));
     // B8:08:CF:5A:1C:C0
     // ptrh=gethostbyname("208.91.53.193");
-    ptrh=gethostbyname("10.7.92.71");
+    ptrh=gethostbyname("208.91.55.130");
     memcpy(&server_addr.sin_addr,ptrh->h_addr,ptrh->h_length);
 
-    if( -1 == (connect(clientSocket, (struct sockaddr*)&server_addr, sizeof(server_addr)))) 
+    if( -1 == (connect(clientSocket, (struct sockaddr*)&server_addr, sizeof(server_addr))))
     { printf("\nServer Not Ready !!\n"); exit(1); }
 
 while(1)
