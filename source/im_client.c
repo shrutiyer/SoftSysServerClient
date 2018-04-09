@@ -1,3 +1,5 @@
+// code from: https://stackoverflow.com/questions/18021189/how-to-connect-two-computers-over-internet-using-socket-programming-in-c
+
 #include<stdio.h>
 #include<sys/types.h>
 #include<sys/socket.h>
@@ -24,7 +26,7 @@ int main(void)
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(10001);
 
-    bind(clientSocket, (struct sockaddr*)&server_addr, sizeof(struct sockaddr));
+    // bind(clientSocket, (struct sockaddr*)&server_addr, sizeof(struct sockaddr));
     // B8:08:CF:5A:1C:C0
     // ptrh=gethostbyname("208.91.53.193");
     ptrh=gethostbyname("208.91.55.130");

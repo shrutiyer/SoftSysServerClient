@@ -1,3 +1,4 @@
+// code from https://stackoverflow.com/questions/18021189/how-to-connect-two-computers-over-internet-using-socket-programming-in-c
 #include<sys/types.h>
 #include<sys/socket.h>
 #include<netinet/in.h>
@@ -20,7 +21,7 @@ serverSocket=socket(AF_INET, SOCK_STREAM, 0);
 memset((char*)&server_addr,0,sizeof(server_addr));
 
 server_addr.sin_family = AF_INET;
-server_addr.sin_port = htons(10000);
+server_addr.sin_port = htons(10001);
 
 server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
