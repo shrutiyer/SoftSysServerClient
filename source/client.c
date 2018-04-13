@@ -7,9 +7,20 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <pthread.h>
 
 #define PORT 3000
 #define BUFFER_SIZE 1024
+
+void* handle_server(void* arg) {
+  int sock_fd = *(int*)arg;
+  char buffer[BUFFER_SIZE];
+  int read_val;
+  while ((read_val = read(sock_fd, buffer, BUFFER_SIZE)) > 0) {
+    printf("Server: %s\n", buffer);
+  }
+  pthread_exit(NULL);
+}
 
 int main(int argc, char const *argv[]) {
   int sock_fd;
@@ -32,17 +43,19 @@ int main(int argc, char const *argv[]) {
     exit(EXIT_FAILURE);
   }
 
-  char *msg_from_client = "Hello From Client";
-  int send_val = send(sock_fd, msg_from_client, strlen(msg_from_client), 0);
-  if (send_val < 0) {
-    perror("Sending failure");
-    exit(EXIT_FAILURE);
+  pthread_t tid;
+  pthread_create(&tid, NULL, &handle_server, (void*)&sock_fd);
+  while(1) {
+    char msg_from_client[BUFFER_SIZE];
+    printf("> ");
+    fgets(msg_from_client, BUFFER_SIZE, stdin);
+    int send_val = send(sock_fd, msg_from_client, strlen(msg_from_client), 0);
+    if (send_val < 0) {
+      perror("Sending failure");
+      exit(EXIT_FAILURE);
+    }
   }
 
-  char buffer[BUFFER_SIZE];
-  int read_val = read(sock_fd, buffer, BUFFER_SIZE);
-  printf("From Server: %s\n", buffer);
   close(sock_fd);
-
   return 0;
 }
