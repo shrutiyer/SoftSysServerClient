@@ -3,6 +3,7 @@
 #include <string.h>
 #include <netdb.h>
 #include <unistd.h>
+#include <pthread.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -10,10 +11,43 @@
 #define BUFFER_SIZE 1024
 #define PORT 3000
 
+void* handle_client(void* arg){
+  int child_fd = *(int*)(arg);
+  int read_val;
+  char buffer[BUFFER_SIZE];
+
+
+  while((read_val = read(child_fd, buffer, BUFFER_SIZE)) > 0){
+    // Possible TODO: Determining who sent the message
+
+    // int read_val = read(child_fd, buffer, BUFFER_SIZE);
+    if (read_val < 0) {
+      perror("Reading error");
+      exit(EXIT_FAILURE);
+    }
+
+    printf("From Client: %s\n", buffer);
+  }
+  pthread_exit(NULL);
+}
+
+void* broadcast(void* arg){
+  while(1){
+    int child_fd = *(int*)(arg);  
+    char writebuffer[BUFFER_SIZE];
+    printf("> ");
+    fgets(writebuffer, BUFFER_SIZE, stdin);
+    send(child_fd, writebuffer, strlen(writebuffer), 0);
+  }
+  pthread_exit(NULL);
+}
+
 int main(int argc, char const *argv[]) {
   int parent_fd, child_fd;
   int opt = 1;      // Reuse flag
   struct sockaddr_in server_address;
+  pthread_t tidc, tidb;
+  int retc, retb;
 
   parent_fd = socket(AF_INET, SOCK_STREAM, 0);
   if (parent_fd == 0) {
@@ -46,25 +80,25 @@ int main(int argc, char const *argv[]) {
     exit(EXIT_FAILURE);
   }
 
-  int server_address_len = sizeof(server_address);
-  child_fd = accept(parent_fd, (struct sockaddr *)&server_address, &server_address_len);
-  if (child_fd < 0) {
-    perror("Accepting error");
-    exit(EXIT_FAILURE);
-  }
+  while(1){
+    printf("here\n");
+    int server_address_len = sizeof(server_address);
+    child_fd = accept(parent_fd, (struct sockaddr *)&server_address, &server_address_len);
+    if (child_fd < 0) {
+      perror("Accepting error");
+      exit(EXIT_FAILURE);
+    }
 
-  // Possible TODO: Determining who sent the message
-  char buffer[BUFFER_SIZE];
-  char *msg_from_server = "Hello From The Server";
-  int read_val = read(child_fd, buffer, BUFFER_SIZE);
-  if (read_val < 0) {
-    perror("Reading error");
-    exit(EXIT_FAILURE);
+    retc = pthread_create(&tidc, NULL, &handle_client, (void*)&child_fd);
+    if (retc != 0) {
+      perror("pthread_create failed");
+    }
+    retb = pthread_create(&tidb, NULL, &broadcast, (void*)&child_fd);
+    if (retb != 0) {
+      perror("pthread_create failed");
+    }
+    sleep(1);
   }
-
-  printf("From Client: %s\n", buffer);
-  send(child_fd, msg_from_server, strlen(msg_from_server), 0);
   close(child_fd);
-
   return 0;
 }
