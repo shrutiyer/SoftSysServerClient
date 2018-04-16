@@ -9,7 +9,19 @@
 #include <netinet/in.h>
 
 #define BUFFER_SIZE 1024
-#define PORT 3000
+#define PORT 80
+#define MAX_CLIENTS 10
+
+int clients_array[MAX_CLIENTS];   // List of clients in the chat
+int total_clients = 0;
+
+
+void add_client(int client_fd) {
+  if (total_clients < MAX_CLIENTS) {
+    clients_array[total_clients] = client_fd;
+    total_clients = total_clients+1;
+  }
+}
 
 void* handle_client(void* arg){
   int child_fd = *(int*)(arg);
@@ -20,7 +32,6 @@ void* handle_client(void* arg){
   while((read_val = read(child_fd, buffer, BUFFER_SIZE)) > 0){
     // Possible TODO: Determining who sent the message
 
-    // int read_val = read(child_fd, buffer, BUFFER_SIZE);
     if (read_val < 0) {
       perror("Reading error");
       exit(EXIT_FAILURE);
@@ -31,13 +42,27 @@ void* handle_client(void* arg){
   pthread_exit(NULL);
 }
 
+// void send_to_all_clients(char* msg, Snl_server_struct* snl_server){
+//   printf("Total clients %d\n", snl_server->total_clients);
+//   for(int i=0; i<snl_server->total_clients; i++) {
+//     printf("Sending Client FD %d\n", snl_server->clients_array[i]);
+//     send(snl_server->clients_array[i], msg, strlen(msg), 0);
+//   }
+// }
+
 void* broadcast(void* arg){
   while(1){
-    int child_fd = *(int*)(arg);  
+    int child_fd = *(int*)(arg);
     char writebuffer[BUFFER_SIZE];
     printf("> ");
     fgets(writebuffer, BUFFER_SIZE, stdin);
-    send(child_fd, writebuffer, strlen(writebuffer), 0);
+
+    // send(child_fd, writebuffer, strlen(writebuffer), 0);
+    // send_to_all_clients(writebuffer, snl_server);
+    printf("Total clients %d\n", total_clients);
+    for(int i=0; i<total_clients; i++) {
+      send(clients_array[i], writebuffer, strlen(writebuffer), 0);
+    }
   }
   pthread_exit(NULL);
 }
@@ -80,8 +105,10 @@ int main(int argc, char const *argv[]) {
     exit(EXIT_FAILURE);
   }
 
+  // Snl_server_struct* snl_server = make_snl_server();
+
+  // Start accepting clients
   while(1){
-    printf("here\n");
     int server_address_len = sizeof(server_address);
     child_fd = accept(parent_fd, (struct sockaddr *)&server_address, &server_address_len);
     if (child_fd < 0) {
@@ -89,6 +116,9 @@ int main(int argc, char const *argv[]) {
       exit(EXIT_FAILURE);
     }
 
+    // Add a new child fd
+    add_client(child_fd);
+    
     retc = pthread_create(&tidc, NULL, &handle_client, (void*)&child_fd);
     if (retc != 0) {
       perror("pthread_create failed");
