@@ -9,15 +9,18 @@
 #include <netinet/in.h>
 #include <pthread.h>
 
-#define PORT 3000
+#define PORT 80
 #define BUFFER_SIZE 1024
 
 void* handle_server(void* arg) {
   int sock_fd = *(int*)arg;
-  char buffer[BUFFER_SIZE];
+  char buffer[BUFFER_SIZE] = {0};
   int read_val;
+
   while ((read_val = read(sock_fd, buffer, BUFFER_SIZE)) > 0) {
+
     printf("Server: %s\n", buffer);
+    memset(buffer, 0, BUFFER_SIZE);
   }
   pthread_exit(NULL);
 }
@@ -34,7 +37,7 @@ int main(int argc, char const *argv[]) {
 
   memset(&server_address, 0, sizeof(server_address));
   server_address.sin_family = AF_INET;
-  server_address.sin_addr.s_addr = inet_addr("");
+  server_address.sin_addr.s_addr = inet_addr("10.7.92.77");
   server_address.sin_port = htons(PORT);
 
   int connect_val = connect(sock_fd, (const struct sockaddr *)&server_address, sizeof(server_address));
@@ -46,9 +49,13 @@ int main(int argc, char const *argv[]) {
   pthread_t tid;
   pthread_create(&tid, NULL, &handle_server, (void*)&sock_fd);
   while(1) {
-    char msg_from_client[BUFFER_SIZE];
+    char msg_from_client[BUFFER_SIZE] = {0};
     printf("> ");
     fgets(msg_from_client, BUFFER_SIZE, stdin);
+    if(strncmp(msg_from_client, "/exit\n", BUFFER_SIZE) == 0){
+      puts("exiting....");
+      exit(0);
+    }
     int send_val = send(sock_fd, msg_from_client, strlen(msg_from_client), 0);
     if (send_val < 0) {
       perror("Sending failure");

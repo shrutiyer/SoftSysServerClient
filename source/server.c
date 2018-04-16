@@ -9,34 +9,32 @@
 #include <netinet/in.h>
 
 #define BUFFER_SIZE 1024
-#define PORT 3000
+#define PORT 80
 
 void* handle_client(void* arg){
   int child_fd = *(int*)(arg);
   int read_val;
-  char buffer[BUFFER_SIZE];
+  char buffer[BUFFER_SIZE] = {0};
 
-
-  while((read_val = read(child_fd, buffer, BUFFER_SIZE)) > 0){
+  while((read_val = read(child_fd, buffer, BUFFER_SIZE-1)) > 0){
     // Possible TODO: Determining who sent the message
-
-    // int read_val = read(child_fd, buffer, BUFFER_SIZE);
-    if (read_val < 0) {
-      perror("Reading error");
-      exit(EXIT_FAILURE);
-    }
-
     printf("From Client: %s\n", buffer);
+    memset(buffer, 0, BUFFER_SIZE);
   }
   pthread_exit(NULL);
 }
 
 void* broadcast(void* arg){
   while(1){
-    int child_fd = *(int*)(arg);  
-    char writebuffer[BUFFER_SIZE];
+    int child_fd = *(int*)(arg);
+    char writebuffer[BUFFER_SIZE] = {0};
     printf("> ");
     fgets(writebuffer, BUFFER_SIZE, stdin);
+    
+    if(strncmp(writebuffer, "/exit\n", BUFFER_SIZE) == 0){
+      puts("exiting....");
+      exit(0);
+    }
     send(child_fd, writebuffer, strlen(writebuffer), 0);
   }
   pthread_exit(NULL);
@@ -81,7 +79,7 @@ int main(int argc, char const *argv[]) {
   }
 
   while(1){
-    printf("here\n");
+    printf("Server online\n");
     int server_address_len = sizeof(server_address);
     child_fd = accept(parent_fd, (struct sockaddr *)&server_address, &server_address_len);
     if (child_fd < 0) {
