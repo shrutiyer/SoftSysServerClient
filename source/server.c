@@ -26,18 +26,12 @@ void add_client(int client_fd) {
 void* handle_client(void* arg){
   int child_fd = *(int*)(arg);
   int read_val;
-  char buffer[BUFFER_SIZE];
+  char buffer[BUFFER_SIZE] = {0};
 
-
-  while((read_val = read(child_fd, buffer, BUFFER_SIZE)) > 0){
+  while((read_val = read(child_fd, buffer, BUFFER_SIZE-1)) > 0){
     // Possible TODO: Determining who sent the message
-
-    if (read_val < 0) {
-      perror("Reading error");
-      exit(EXIT_FAILURE);
-    }
-
     printf("From Client: %s\n", buffer);
+    memset(buffer, 0, BUFFER_SIZE);
   }
   pthread_exit(NULL);
 }
@@ -53,9 +47,14 @@ void* handle_client(void* arg){
 void* broadcast(void* arg){
   while(1){
     int child_fd = *(int*)(arg);
-    char writebuffer[BUFFER_SIZE];
+    char writebuffer[BUFFER_SIZE] = {0};
     printf("> ");
     fgets(writebuffer, BUFFER_SIZE, stdin);
+
+    if(strncmp(writebuffer, "/exit\n", BUFFER_SIZE) == 0){
+      puts("Exiting now");
+      exit(0);
+    }
 
     // send(child_fd, writebuffer, strlen(writebuffer), 0);
     // send_to_all_clients(writebuffer, snl_server);
@@ -109,6 +108,7 @@ int main(int argc, char const *argv[]) {
 
   // Start accepting clients
   while(1){
+    printf("Server online\n");
     int server_address_len = sizeof(server_address);
     child_fd = accept(parent_fd, (struct sockaddr *)&server_address, &server_address_len);
     if (child_fd < 0) {
@@ -118,7 +118,7 @@ int main(int argc, char const *argv[]) {
 
     // Add a new child fd
     add_client(child_fd);
-    
+
     retc = pthread_create(&tidc, NULL, &handle_client, (void*)&child_fd);
     if (retc != 0) {
       perror("pthread_create failed");
