@@ -1,7 +1,7 @@
 #Sofysys Server Client Update
 ##Shruti Iyer, Nora Mohamed, Lucy Wilcox
 ### Overview and Goals
-Originally, the goal of the project was to better understand TCP networking. We were originally basing off what we were planning to do on a previous Software Systems team that made a [HTTP Server in C](https://matthewruehle.github.io/SoftSysQuestingQuail/)., where we would explore TCP, UDP, and HTTPS networking. We then thought that the project would be more worthwhile and engaging when we had the idea to make an instant messaging application. The IM application should:
+Originally, the goal of the project was to better understand TCP networking. We were originally basing our project on a previous Software Systems project: [HTTP Server in C](https://matthewruehle.github.io/SoftSysQuestingQuail/). In this project we would explore TCP, UDP, and HTTPS networking. We then thought that our project would be more worthwhile and engaging by making an instant messaging application. The IM application should:
  
 - Initially be based off of a TCP server
 - Not require a GUI and will be run through bash
