@@ -9,7 +9,7 @@
 #include <netinet/in.h>
 
 #define BUFFER_SIZE 1024
-#define PORT 3000
+#define PORT 80
 
 void* handle_client(void* arg){
   int child_fd = *(int*)(arg);
@@ -39,6 +39,7 @@ void* broadcast(void* arg){
     fgets(writebuffer, BUFFER_SIZE, stdin);
     send(child_fd, writebuffer, strlen(writebuffer), 0);
   }
+  close(child_fd);
   pthread_exit(NULL);
 }
 
