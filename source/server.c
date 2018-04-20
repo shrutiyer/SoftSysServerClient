@@ -7,16 +7,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-
-#define BUFFER_SIZE 1024
-#define PORT 80
-#define MAX_CLIENTS 10
-
-/* Source: https://github.com/yorickdewid/Chat-Server/blob/master/chat_server.c*/
-typedef struct {
-	struct sockaddr_in client_address;	/* Client remote address */
-	int sock_fd;			      /* Socket file descriptor */
-} Client_info;
+#include "server.h"
 
 Client_info* clients_array[MAX_CLIENTS];   // List of clients in the chat
 int total_clients = 0;
@@ -32,11 +23,13 @@ void add_client(Client_info* new_client) {
   if (total_clients < MAX_CLIENTS) {
     clients_array[total_clients] = new_client;
     total_clients = total_clients+1;
+    char msg[23];
+    snprintf(msg, sizeof msg, "New client joined - #%i", new_client->sock_fd);
+    send_to_all_clients(msg);
   }
 }
 
 void send_to_all_clients(char msg[]){
-  printf("Total clients %d\n", total_clients);
   for(int i=0; i<total_clients; i++) {
     send(clients_array[i]->sock_fd, msg, strlen(msg), 0);
   }
@@ -49,8 +42,10 @@ void* handle_client(void* arg){
 
   while((read_val = read(child_fd, buffer, BUFFER_SIZE-1)) > 0){
     // Possible TODO: Determining who sent the message
-    printf("From Client: %s\n", buffer);
-    send_to_all_clients(buffer);
+    printf("Client #%i says: %s", child_fd, buffer);
+    char msg[BUFFER_SIZE];
+    snprintf(msg, sizeof msg, "Client #%i says: %s", child_fd, buffer);
+    send_to_all_clients(msg);
     memset(buffer, 0, BUFFER_SIZE);
   }
   pthread_exit(NULL);
