@@ -14,10 +14,13 @@
 
 void* handle_server(void* arg) {
   int sock_fd = *(int*)arg;
-  char buffer[BUFFER_SIZE];
+  char buffer[BUFFER_SIZE] = {0};
   int read_val;
+
   while ((read_val = read(sock_fd, buffer, BUFFER_SIZE)) > 0) {
+
     printf("Server: %s\n", buffer);
+    memset(buffer, 0, BUFFER_SIZE);
   }
   pthread_exit(NULL);
 }
@@ -46,9 +49,13 @@ int main(int argc, char const *argv[]) {
   pthread_t tid;
   pthread_create(&tid, NULL, &handle_server, (void*)&sock_fd);
   while(1) {
-    char msg_from_client[BUFFER_SIZE];
+    char msg_from_client[BUFFER_SIZE] = {0};
     printf("> ");
     fgets(msg_from_client, BUFFER_SIZE, stdin);
+    if(strncmp(msg_from_client, "/exit\n", BUFFER_SIZE) == 0){
+      puts("exiting....");
+      exit(0);
+    }
     int send_val = send(sock_fd, msg_from_client, strlen(msg_from_client), 0);
     if (send_val < 0) {
       perror("Sending failure");
