@@ -23,6 +23,13 @@ void add_client(int client_fd) {
   }
 }
 
+void send_to_all_clients(char msg[]){
+  printf("Total clients %d\n", total_clients);
+  for(int i=0; i<total_clients; i++) {
+    send(clients_array[i], msg, strlen(msg), 0);
+  }
+}
+
 void* handle_client(void* arg){
   int child_fd = *(int*)(arg);
   int read_val;
@@ -31,18 +38,11 @@ void* handle_client(void* arg){
   while((read_val = read(child_fd, buffer, BUFFER_SIZE-1)) > 0){
     // Possible TODO: Determining who sent the message
     printf("From Client: %s\n", buffer);
+    send_to_all_clients(buffer);
     memset(buffer, 0, BUFFER_SIZE);
   }
   pthread_exit(NULL);
 }
-
-// void send_to_all_clients(char* msg, Snl_server_struct* snl_server){
-//   printf("Total clients %d\n", snl_server->total_clients);
-//   for(int i=0; i<snl_server->total_clients; i++) {
-//     printf("Sending Client FD %d\n", snl_server->clients_array[i]);
-//     send(snl_server->clients_array[i], msg, strlen(msg), 0);
-//   }
-// }
 
 void* broadcast(void* arg){
   while(1){
@@ -57,11 +57,7 @@ void* broadcast(void* arg){
     }
 
     // send(child_fd, writebuffer, strlen(writebuffer), 0);
-    // send_to_all_clients(writebuffer, snl_server);
-    printf("Total clients %d\n", total_clients);
-    for(int i=0; i<total_clients; i++) {
-      send(clients_array[i], writebuffer, strlen(writebuffer), 0);
-    }
+    // send_to_all_clients(writebuffer);
   }
   pthread_exit(NULL);
 }
@@ -103,8 +99,6 @@ int main(int argc, char const *argv[]) {
     perror("Listening error");
     exit(EXIT_FAILURE);
   }
-
-  // Snl_server_struct* snl_server = make_snl_server();
 
   // Start accepting clients
   while(1){
