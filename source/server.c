@@ -7,19 +7,31 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include "server.h"
 
-#define BUFFER_SIZE 1024
-#define PORT 80
-#define MAX_CLIENTS 10
-
-int clients_array[MAX_CLIENTS];   // List of clients in the chat
+Client_info* clients_array[MAX_CLIENTS];   // List of clients in the chat
 int total_clients = 0;
 
+Client_info* make_client_info(struct sockaddr_in client_address, int sock_fd) {
+  Client_info* new_client = (Client_info*) malloc(sizeof(Client_info));
+  new_client->client_address = client_address;
+  new_client->sock_fd = sock_fd;
+  return new_client;
+}
 
-void add_client(int client_fd) {
+void add_client(Client_info* new_client) {
   if (total_clients < MAX_CLIENTS) {
-    clients_array[total_clients] = client_fd;
+    clients_array[total_clients] = new_client;
     total_clients = total_clients+1;
+    char msg[23];
+    snprintf(msg, sizeof msg, "New client joined - #%i", new_client->sock_fd);
+    send_to_all_clients(msg);
+  }
+}
+
+void send_to_all_clients(char msg[]){
+  for(int i=0; i<total_clients; i++) {
+    send(clients_array[i]->sock_fd, msg, strlen(msg), 0);
   }
 }
 
@@ -30,20 +42,34 @@ void* handle_client(void* arg){
 
   while((read_val = read(child_fd, buffer, BUFFER_SIZE-1)) > 0){
     // Possible TODO: Determining who sent the message
-    printf("From Client: %s\n", buffer);
+    printf("Client #%i says: %s", child_fd, buffer);
+    char msg[BUFFER_SIZE];
+    snprintf(msg, sizeof msg, "Client #%i says: %s", child_fd, buffer);
+    send_to_all_clients(msg);
     memset(buffer, 0, BUFFER_SIZE);
   }
   pthread_exit(NULL);
 }
 
-// void send_to_all_clients(char* msg, Snl_server_struct* snl_server){
-//   printf("Total clients %d\n", snl_server->total_clients);
-//   for(int i=0; i<snl_server->total_clients; i++) {
-//     printf("Sending Client FD %d\n", snl_server->clients_array[i]);
-//     send(snl_server->clients_array[i], msg, strlen(msg), 0);
+// void* broadcast(void* arg){
+//   while(1){
+//     int child_fd = *(int*)(arg);
+//     char writebuffer[BUFFER_SIZE] = {0};
+//     printf("> ");
+//     fgets(writebuffer, BUFFER_SIZE, stdin);
+//
+//     if(strncmp(writebuffer, "/exit\n", BUFFER_SIZE) == 0){
+//       puts("Exiting now");
+//       exit(0);
+//     }
+//
+//     // send(child_fd, writebuffer, strlen(writebuffer), 0);
+//     // send_to_all_clients(writebuffer);
 //   }
+//   pthread_exit(NULL);
 // }
 
+<<<<<<< HEAD
 void* broadcast(void* arg){
   while(1){
     int child_fd = *(int*)(arg);
@@ -67,10 +93,12 @@ void* broadcast(void* arg){
   pthread_exit(NULL);
 }
 
+=======
+>>>>>>> fb6ec1e0b34914013253707a594dca9369d5b9d6
 int main(int argc, char const *argv[]) {
   int parent_fd, child_fd;
   int opt = 1;      // Reuse flag
-  struct sockaddr_in server_address;
+  struct sockaddr_in server_address, client_address;
   pthread_t tidc, tidb;
   int retc, retb;
 
@@ -105,29 +133,28 @@ int main(int argc, char const *argv[]) {
     exit(EXIT_FAILURE);
   }
 
-  // Snl_server_struct* snl_server = make_snl_server();
-
   // Start accepting clients
   while(1){
     printf("Server online\n");
-    int server_address_len = sizeof(server_address);
-    child_fd = accept(parent_fd, (struct sockaddr *)&server_address, &server_address_len);
+    int client_address_len = sizeof(client_address);
+    child_fd = accept(parent_fd, (struct sockaddr *)&client_address, &client_address_len);
     if (child_fd < 0) {
       perror("Accepting error");
       exit(EXIT_FAILURE);
     }
 
+    Client_info* new_client = make_client_info(client_address, child_fd);
     // Add a new child fd
-    add_client(child_fd);
+    add_client(new_client);
 
     retc = pthread_create(&tidc, NULL, &handle_client, (void*)&child_fd);
     if (retc != 0) {
       perror("pthread_create failed");
     }
-    retb = pthread_create(&tidb, NULL, &broadcast, (void*)&child_fd);
-    if (retb != 0) {
-      perror("pthread_create failed");
-    }
+    // retb = pthread_create(&tidb, NULL, &broadcast, (void*)&child_fd);
+    // if (retb != 0) {
+    //   perror("pthread_create failed");
+    // }
     sleep(1);
   }
   close(child_fd);
