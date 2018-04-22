@@ -16,6 +16,8 @@ Client_info* make_client_info(struct sockaddr_in client_address, int sock_fd) {
   Client_info* new_client = (Client_info*) malloc(sizeof(Client_info));
   new_client->client_address = client_address;
   new_client->sock_fd = sock_fd;
+  new_client->name = malloc(sizeof(char)*100);
+  sprintf(new_client->name, "%d", sock_fd);
   return new_client;
 }
 
@@ -24,7 +26,7 @@ void add_client(Client_info* new_client) {
     clients_array[total_clients] = new_client;
     total_clients = total_clients+1;
     char msg[23];
-    snprintf(msg, sizeof msg, "New client joined - #%i", new_client->sock_fd);
+    snprintf(msg, sizeof msg, "New client joined - #%s", new_client->name);
     send_to_all_clients(msg);
   }
 }
@@ -36,16 +38,28 @@ void send_to_all_clients(char msg[]){
 }
 
 void* handle_client(void* arg){
-  int child_fd = *(int*)(arg);
+  // int child_fd = *(int*)(arg);
+  Client_info* client = (Client_info*)(arg);
+  int child_fd = client->sock_fd;
   int read_val;
   char buffer[BUFFER_SIZE] = {0};
 
   while((read_val = read(child_fd, buffer, BUFFER_SIZE-1)) > 0){
     // Possible TODO: Determining who sent the message
     printf("Client #%i says: %s", child_fd, buffer);
-    char msg[BUFFER_SIZE];
-    snprintf(msg, sizeof msg, "Client #%i says: %s", child_fd, buffer);
-    send_to_all_clients(msg);
+    if(!strncmp(buffer, "$NAME", 5)){
+
+      char* client_name = malloc(sizeof(char)*100);
+      strcpy(client_name, buffer);
+      client_name = client_name + 6;
+      client_name[strlen(client_name)-1] = 0;
+      client->name = client_name;
+    } else{
+
+      char msg[BUFFER_SIZE];
+      snprintf(msg, sizeof msg, "Client %s says: %s", client->name, buffer);
+      send_to_all_clients(msg);
+    }
     memset(buffer, 0, BUFFER_SIZE);
   }
   pthread_exit(NULL);
@@ -69,32 +83,7 @@ void* handle_client(void* arg){
 //   pthread_exit(NULL);
 // }
 
-<<<<<<< HEAD
-void* broadcast(void* arg){
-  while(1){
-    int child_fd = *(int*)(arg);
-    char writebuffer[BUFFER_SIZE] = {0};
-    printf("> ");
-    fgets(writebuffer, BUFFER_SIZE, stdin);
 
-    if(strncmp(writebuffer, "/exit\n", BUFFER_SIZE) == 0){
-      puts("Exiting now");
-      exit(0);
-    }
-
-    // send(child_fd, writebuffer, strlen(writebuffer), 0);
-    // send_to_all_clients(writebuffer, snl_server);
-    printf("Total clients %d\n", total_clients);
-    for(int i=0; i<total_clients; i++) {
-      send(clients_array[i], writebuffer, strlen(writebuffer), 0);
-    }
-  }
-  close(child_fd);
-  pthread_exit(NULL);
-}
-
-=======
->>>>>>> fb6ec1e0b34914013253707a594dca9369d5b9d6
 int main(int argc, char const *argv[]) {
   int parent_fd, child_fd;
   int opt = 1;      // Reuse flag
@@ -147,7 +136,7 @@ int main(int argc, char const *argv[]) {
     // Add a new child fd
     add_client(new_client);
 
-    retc = pthread_create(&tidc, NULL, &handle_client, (void*)&child_fd);
+    retc = pthread_create(&tidc, NULL, &handle_client, (void*)new_client);
     if (retc != 0) {
       perror("pthread_create failed");
     }

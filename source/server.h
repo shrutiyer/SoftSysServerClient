@@ -16,6 +16,7 @@
 typedef struct {
 	struct sockaddr_in client_address;	/* Client remote address */
 	int sock_fd;			      /* Socket file descriptor */
+	char* name;
 } Client_info;
 
 Client_info* make_client_info(struct sockaddr_in client_address, int sock_fd);
