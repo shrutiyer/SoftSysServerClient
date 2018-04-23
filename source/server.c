@@ -69,28 +69,28 @@ void* handle_client(void* arg){
 //   pthread_exit(NULL);
 // }
 
-void* broadcast(void* arg){
-  while(1){
-    int child_fd = *(int*)(arg);
-    char writebuffer[BUFFER_SIZE] = {0};
-    printf("> ");
-    fgets(writebuffer, BUFFER_SIZE, stdin);
+// void* broadcast(void* arg){
+//   while(1){
+//     int child_fd = *(int*)(arg);
+//     char writebuffer[BUFFER_SIZE] = {0};
+//     printf("> ");
+//     fgets(writebuffer, BUFFER_SIZE, stdin);
 
-    if(strncmp(writebuffer, "/exit\n", BUFFER_SIZE) == 0){
-      puts("Exiting now");
-      exit(0);
-    }
+//     if(strncmp(writebuffer, "/exit\n", BUFFER_SIZE) == 0){
+//       puts("Exiting now");
+//       exit(0);
+//     }
 
-    // send(child_fd, writebuffer, strlen(writebuffer), 0);
-    // send_to_all_clients(writebuffer, snl_server);
-    printf("Total clients %d\n", total_clients);
-    for(int i=0; i<total_clients; i++) {
-      send(clients_array[i], writebuffer, strlen(writebuffer), 0);
-    }
-  }
-  close(child_fd);
-  pthread_exit(NULL);
-}
+//     // send(child_fd, writebuffer, strlen(writebuffer), 0);
+//     // send_to_all_clients(writebuffer, snl_server);
+//     printf("Total clients %d\n", total_clients);
+//     for(int i=0; i<total_clients; i++) {
+//       send(clients_array[i], writebuffer, strlen(writebuffer), 0);
+//     }
+//   }
+//   close(child_fd);
+//   pthread_exit(NULL);
+// }
 
 int main(int argc, char const *argv[]) {
   int parent_fd, child_fd;
