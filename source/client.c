@@ -19,7 +19,7 @@ void* handle_server(void* arg) {
 
   while ((read_val = read(sock_fd, buffer, BUFFER_SIZE)) > 0) {
 
-    printf("Server: %s\n", buffer);
+    printf("%s\n", buffer);
     memset(buffer, 0, BUFFER_SIZE);
   }
   pthread_exit(NULL);
