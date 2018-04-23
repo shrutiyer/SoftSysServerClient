@@ -69,7 +69,6 @@ void* handle_client(void* arg){
 //   pthread_exit(NULL);
 // }
 
-<<<<<<< HEAD
 void* broadcast(void* arg){
   while(1){
     int child_fd = *(int*)(arg);
@@ -93,8 +92,6 @@ void* broadcast(void* arg){
   pthread_exit(NULL);
 }
 
-=======
->>>>>>> fb6ec1e0b34914013253707a594dca9369d5b9d6
 int main(int argc, char const *argv[]) {
   int parent_fd, child_fd;
   int opt = 1;      // Reuse flag
