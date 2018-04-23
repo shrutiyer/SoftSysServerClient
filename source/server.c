@@ -45,17 +45,24 @@ void* handle_client(void* arg){
 
   while((read_val = read(child_fd, buffer, BUFFER_SIZE-1)) > 0){
     printf("Client #%i says: %s", child_fd, buffer); // could switch this to the name or from the server's prespective maybe it could just be child_fd
+    char msg[BUFFER_SIZE];
+
     if(!strncmp(buffer, "$NAME", 5)){
 
+      char* old_client_name = malloc(sizeof(char)*USERNAME_SIZE);
+      strcpy(old_client_name, client->name);
       char* client_name = malloc(sizeof(char)*USERNAME_SIZE);
       strcpy(client_name, buffer);
       client_name = client_name + 6;
       client_name[strlen(client_name)-1] = 0;
       client->name = client_name;
+
+      snprintf(msg, sizeof msg, "client %s is not client %s", old_client_name, client->name);
+      send_to_all_clients(msg);
+
     } else{
 
-      char msg[BUFFER_SIZE];
-      snprintf(msg, sizeof msg, "Client %s says: %s", client->name, buffer);
+      snprintf(msg, sizeof msg, "%s: %s", client->name, buffer);
       send_to_all_clients(msg);
     }
     memset(buffer, 0, BUFFER_SIZE);
