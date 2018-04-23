@@ -16,7 +16,7 @@ Client_info* make_client_info(struct sockaddr_in client_address, int sock_fd) {
   Client_info* new_client = (Client_info*) malloc(sizeof(Client_info));
   new_client->client_address = client_address;
   new_client->sock_fd = sock_fd;
-  new_client->name = malloc(sizeof(char)*100);
+  new_client->name = malloc(sizeof(char)*USERNAME_SIZE);
   sprintf(new_client->name, "%d", sock_fd);
   return new_client;
 }
@@ -38,18 +38,16 @@ void send_to_all_clients(char msg[]){
 }
 
 void* handle_client(void* arg){
-  // int child_fd = *(int*)(arg);
   Client_info* client = (Client_info*)(arg);
   int child_fd = client->sock_fd;
   int read_val;
   char buffer[BUFFER_SIZE] = {0};
 
   while((read_val = read(child_fd, buffer, BUFFER_SIZE-1)) > 0){
-    // Possible TODO: Determining who sent the message
-    printf("Client #%i says: %s", child_fd, buffer);
+    printf("Client #%i says: %s", child_fd, buffer); // could switch this to the name or from the server's prespective maybe it could just be child_fd
     if(!strncmp(buffer, "$NAME", 5)){
 
-      char* client_name = malloc(sizeof(char)*100);
+      char* client_name = malloc(sizeof(char)*USERNAME_SIZE);
       strcpy(client_name, buffer);
       client_name = client_name + 6;
       client_name[strlen(client_name)-1] = 0;

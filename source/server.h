@@ -11,6 +11,7 @@
 #define BUFFER_SIZE 1024
 #define PORT 80
 #define MAX_CLIENTS 10
+#define USERNAME_SIZE 100
 
 /* Source: https://github.com/yorickdewid/Chat-Server/blob/master/chat_server.c*/
 typedef struct {
