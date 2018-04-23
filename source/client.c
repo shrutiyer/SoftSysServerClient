@@ -19,7 +19,7 @@ void* handle_server(void* arg) {
 
   while ((read_val = read(sock_fd, buffer, BUFFER_SIZE)) > 0) {
 
-    printf("Server: %s\n", buffer);
+    printf("%s\n", buffer);
     memset(buffer, 0, BUFFER_SIZE);
   }
   pthread_exit(NULL);
@@ -37,7 +37,7 @@ int main(int argc, char const *argv[]) {
 
   memset(&server_address, 0, sizeof(server_address));
   server_address.sin_family = AF_INET;
-  server_address.sin_addr.s_addr = inet_addr("192.168.32.100");
+  server_address.sin_addr.s_addr = inet_addr("192.168.35.80");
   server_address.sin_port = htons(PORT);
 
   int connect_val = connect(sock_fd, (const struct sockaddr *)&server_address, sizeof(server_address));
