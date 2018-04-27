@@ -1,3 +1,11 @@
+/*
+  SNL (Shruti, Nora, Lucy) Server Client Project
+  Created for Software Systems Project 2
+  Authors: LucyWilcox, nmohamed, shrutiyer
+
+  This is a bash-based chat client.
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,6 +20,11 @@
 #define PORT 80
 #define BUFFER_SIZE 1024
 
+/*
+Thread that handles server and prints incoming messages
+Inputs: int* of socket file descriptor cast as a a void*
+Returns: Nothing
+*/
 void* handle_server(void* arg) {
   int sock_fd = *(int*)arg;
   char buffer[BUFFER_SIZE] = {0};
@@ -25,6 +38,11 @@ void* handle_server(void* arg) {
   pthread_exit(NULL);
 }
 
+/*
+Main function, connects to server, waits for user input and sends to server
+Input: argc, argv
+Returns: 0 when done
+*/
 int main(int argc, char const *argv[]) {
   int sock_fd;
   struct sockaddr_in server_address;
@@ -37,7 +55,7 @@ int main(int argc, char const *argv[]) {
 
   memset(&server_address, 0, sizeof(server_address));
   server_address.sin_family = AF_INET;
-  server_address.sin_addr.s_addr = inet_addr("167.99.229.132");
+  server_address.sin_addr.s_addr = inet_addr("167.99.229.132"); //ip of server
   server_address.sin_port = htons(PORT);
 
   int connect_val = connect(sock_fd, (const struct sockaddr *)&server_address, sizeof(server_address));
