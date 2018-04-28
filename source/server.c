@@ -45,15 +45,26 @@ void* handle_client(void* arg){
 
   while((read_val = read(child_fd, buffer, BUFFER_SIZE-1)) > 0){
     printf("Client #%i says: %s", child_fd, buffer); // could switch this to the name or from the server's prespective maybe it could just be child_fd
-    if(!strncmp(buffer, "$NAME", 5)){
+    // Update client username
+    if(!strncmp(buffer, "$NAME ", 6)){
 
       char* client_name = malloc(sizeof(char)*USERNAME_SIZE);
       strcpy(client_name, buffer);
       client_name = client_name + 6;
       client_name[strlen(client_name)-1] = 0;
       client->name = client_name;
-    } else{
-
+    }
+    // Accept files
+    if(!strncmp(buffer, "/send ", 6)){
+      // recieve file sizeof
+      puts("*");
+      char* file_size_str;
+      sprintf(file_size_str, "%s", buffer + 6);
+      puts("~");
+      int file_size = (int) strtol(file_size_str, NULL, 10);
+      printf("*%i*", file_size);
+    }  // Send to all clients
+    else{
       char msg[BUFFER_SIZE];
       snprintf(msg, sizeof msg, "Client %s says: %s", client->name, buffer);
       send_to_all_clients(msg);
@@ -142,6 +153,7 @@ int main(int argc, char const *argv[]) {
     // if (retb != 0) {
     //   perror("pthread_create failed");
     // }
+
     sleep(1);
   }
   close(child_fd);

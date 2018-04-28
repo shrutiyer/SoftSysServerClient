@@ -37,7 +37,7 @@ int main(int argc, char const *argv[]) {
 
   memset(&server_address, 0, sizeof(server_address));
   server_address.sin_family = AF_INET;
-  server_address.sin_addr.s_addr = inet_addr("192.168.1.5");
+  server_address.sin_addr.s_addr = inet_addr("127.0.0.1");
   server_address.sin_port = htons(PORT);
 
   int connect_val = connect(sock_fd, (const struct sockaddr *)&server_address, sizeof(server_address));
@@ -52,10 +52,53 @@ int main(int argc, char const *argv[]) {
     char msg_from_client[BUFFER_SIZE] = {0};
     printf("> ");
     fgets(msg_from_client, BUFFER_SIZE, stdin);
+
+	  // Exit from client
     if(strncmp(msg_from_client, "/exit\n", BUFFER_SIZE) == 0){
       puts("exiting....");
       exit(0);
     }
+
+	  // Send file
+  	if(strncmp(msg_from_client, "/send ", 6) == 0){
+  		char* file_name = malloc(sizeof(char)*BUFFER_SIZE-6);
+  		strcpy(file_name, msg_from_client);
+  		file_name = file_name + 6;
+  		file_name[strlen(file_name)-1] = 0;
+          printf("Sending %s...", file_name);
+
+  		// Get file size
+  		FILE *file;
+  		file = fopen("image.png", "r");
+  		int size;
+
+  		fseek(file, 0, SEEK_END);
+  		size = ftell(file);
+  		fseek(file, 0, SEEK_SET);
+
+  		// Send  Size
+      char* size_message = malloc(sizeof(size)+6);
+      sprintf(size_message, "/send %i", size);
+  		int send_val = send(sock_fd, size_message, strlen(size_message), 0);
+  		if (send_val < 0) {
+  	      perror("Sending failure");
+  	      exit(EXIT_FAILURE);
+  	  }
+
+  		// Send file
+  		char file_buffer[size];
+  		// while(!feof(file)) {
+      //   fread(file_buffer, 1, sizeof(file_buffer), file);
+      //   send_val = write(sock_fd, file_buffer, sizeof(file_buffer));
+      //   bzero(file_buffer, sizeof(file_buffer));
+  		// 	if (send_val < 0) {
+  		// 		perror("Sending failure");
+  		// 		exit(EXIT_FAILURE);
+  		// 	}
+      // }
+      continue;
+    }
+
     int send_val = send(sock_fd, msg_from_client, strlen(msg_from_client), 0);
     if (send_val < 0) {
       perror("Sending failure");
