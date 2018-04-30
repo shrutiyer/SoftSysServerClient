@@ -45,19 +45,32 @@ void add_client(Client_info* new_client) {
     clients_array[total_clients] = new_client; // add client to array
     total_clients = total_clients+1; // increase number of clients
     char msg[23];
-    snprintf(msg, sizeof msg, "New client joined - #%s", new_client->name);
+    snprintf(msg, sizeof msg, "New client joined - #%s\n", new_client->name);
     send_to_all_clients(msg);
   }
 }
 
 /*
-Broadcasts message to all clients connected
+Broadcasts message to all clients connected, for most special messages
 Inputs: char[] of message to be sent
 Returns: Nothing
 */
 void send_to_all_clients(char msg[]){
   for(int i=0; i<total_clients; i++) {
     send(clients_array[i]->sock_fd, msg, strlen(msg), 0); 
+  }
+}
+
+/*
+Broadcasts message to other clients connected, for most normal messages
+Inputs: char[] of message to be sent
+Returns: Nothing
+*/
+void send_to_other_clients(char msg[], int sender){
+  for(int i=0; i<total_clients; i++) {
+    if(clients_array[i]->sock_fd != sender){
+      send(clients_array[i]->sock_fd, msg, strlen(msg), 0); 
+    }
   }
 }
 
@@ -93,7 +106,7 @@ void* handle_client(void* arg){
     } else{
 
       snprintf(msg, sizeof msg, "%s: %s", client->name, buffer);
-      send_to_all_clients(msg);
+      send_to_other_clients(msg, client->sock_fd);
     }
     memset(buffer, 0, BUFFER_SIZE);
   }

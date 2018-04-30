@@ -53,9 +53,9 @@ int main(int argc, char const *argv[]) {
     exit(EXIT_FAILURE);
   }
 
-  memset(&server_address, 0, sizeof(server_address));
+  memset(&server_address, 0, sizeof(server_address)); // clear address
   server_address.sin_family = AF_INET;
-  server_address.sin_addr.s_addr = inet_addr("167.99.229.132"); //ip of server
+  server_address.sin_addr.s_addr = inet_addr("192.168.33.215"); //ip of server
   server_address.sin_port = htons(PORT);
 
   int connect_val = connect(sock_fd, (const struct sockaddr *)&server_address, sizeof(server_address));
@@ -63,7 +63,7 @@ int main(int argc, char const *argv[]) {
     perror("Connection failure");
     exit(EXIT_FAILURE);
   }
-
+  // we make a new thread for reading from the server
   pthread_t tid;
   pthread_create(&tid, NULL, &handle_server, (void*)&sock_fd);
   while(1) {
@@ -74,9 +74,11 @@ int main(int argc, char const *argv[]) {
       puts("exiting....");
       exit(0);
     } else if(strncmp(msg_from_client, "/help\n", BUFFER_SIZE) == 0){
-      puts("~Welcome to the SNL chatroom~ \n");
-      puts("To exit type \\exit");
-      puts("To change your username type ");
+      puts("~Welcome to the SNL chatroom~");
+      puts("To...");
+      puts("Exit type \\exit");
+      puts("Change your username type \\name your_new_username");
+      puts("Snd a file type \\send /path/tofile/filename");
     }
     int send_val = send(sock_fd, msg_from_client, strlen(msg_from_client), 0);
     if (send_val < 0) {
