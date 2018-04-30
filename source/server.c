@@ -52,7 +52,6 @@ void* handle_client(void* arg){
   while((read_val = read(child_fd, buffer, BUFFER_SIZE-1)) > 0){
         // Accept files
 
-
     if(!strncmp(buffer, "/send ", 6)){
       // recieve file sizeof
       char file_size_str[BUFFER_SIZE - 6];
@@ -94,7 +93,6 @@ void* handle_client(void* arg){
       image = fopen(actual_file_name, "w");
       fwrite(p_array, 1, sizeof(p_array), image);
       fclose(image);
-      file_name_number++;
       send_flag = 1;
       continue;
     }
