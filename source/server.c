@@ -46,6 +46,7 @@ void add_client(Client_info* new_client) {
     total_clients = total_clients+1; // increase number of clients
     char msg[23];
     snprintf(msg, sizeof msg, "New client joined - #%s\n", new_client->name);
+    send_to_new_client(new_client->sock_fd);
     send_to_all_clients(msg);
   }
 }
@@ -74,6 +75,11 @@ void send_to_other_clients(char msg[], int sender){
   }
 }
 
+void send_to_new_client(int client_fd){
+  char msg[BUFFER_SIZE];
+  snprintf(msg, sizeof msg, "~Welcome to the SNL chatroom~\n Type /help for commands\n");
+  send(client_fd, msg, strlen(msg), 0);
+}
 /*
 Code for handling each client thread
 Inputs: Client_info* casts as void*
@@ -122,8 +128,8 @@ int main(int argc, char const *argv[]) {
   int parent_fd, child_fd;
   int opt = 1;      // Reuse flag
   struct sockaddr_in server_address, client_address;
-  pthread_t tidc, tidb;
-  int retc, retb;
+  pthread_t tidc;
+  int retc;
 
   parent_fd = socket(AF_INET, SOCK_STREAM, 0);
   if (parent_fd == 0) {
