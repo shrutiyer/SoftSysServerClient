@@ -9,6 +9,8 @@
 #include <netinet/in.h>
 #include "server.h"
 
+int file_name_number = 0;
+
 Client_info* clients_array[MAX_CLIENTS];   // List of clients in the chat
 int total_clients = 0;
 
@@ -37,20 +39,25 @@ void send_to_all_clients(char msg[]){
   }
 }
 
+
+
 void* handle_client(void* arg){
   Client_info* client = (Client_info*)(arg);
   int child_fd = client->sock_fd;
   int read_val;
   char buffer[BUFFER_SIZE] = {0};
+  int send_flag = 0;
+  int file_size;
 
   while((read_val = read(child_fd, buffer, BUFFER_SIZE-1)) > 0){
         // Accept files
+
 
     if(!strncmp(buffer, "/send ", 6)){
       // recieve file sizeof
       char file_size_str[BUFFER_SIZE - 6];
       strncpy(file_size_str, buffer + 6, BUFFER_SIZE);
-      int file_size = (int) strtol(file_size_str, NULL, 10);
+      file_size = (int) strtol(file_size_str, NULL, 10);
       printf("\nFile size: *%i*\n", file_size);
 
       char p_array[file_size];
@@ -59,9 +66,36 @@ void* handle_client(void* arg){
       // Save recieved file information
       printf("*");
       FILE *image;
-      image = fopen("a.png", "w");
+      char actual_file_name[5];
+      snprintf(actual_file_name, 5, "%i.txt", file_name_number);
+      image = fopen(actual_file_name, "w");
       fwrite(p_array, 1, sizeof(p_array), image);
       fclose(image);
+      send_flag = 1;
+      continue;
+    }
+
+    if(!strncmp(buffer, "send complete", 13)){
+      send_flag = 0;
+      file_size = 0;
+      file_name_number++;
+      continue;
+    }
+
+    if(send_flag == 1){
+      char p_array[file_size];
+      read(child_fd, p_array, file_size);
+
+      // Save recieved file information
+      printf("*");
+      FILE *image;
+      char actual_file_name[5];
+      snprintf(actual_file_name, 5, "%i.txt", file_name_number);
+      image = fopen(actual_file_name, "w");
+      fwrite(p_array, 1, sizeof(p_array), image);
+      fclose(image);
+      file_name_number++;
+      send_flag = 1;
       continue;
     }
 

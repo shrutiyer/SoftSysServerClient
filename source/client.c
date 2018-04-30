@@ -69,7 +69,7 @@ int main(int argc, char const *argv[]) {
 
   		// Open file
   		FILE *file;
-  		file = fopen("image.png", "r");
+  		file = fopen(file_name, "r");
   		fseek(file, 0, SEEK_END);
   		int size = ftell(file);
   		fseek(file, 0, SEEK_SET);
@@ -93,6 +93,13 @@ int main(int argc, char const *argv[]) {
   				perror("Sending failure");
   				exit(EXIT_FAILURE);
   			}
+      }
+
+      char *completion_message = "send complete";
+      send_val = send(sock_fd, completion_message, strlen(completion_message), 0);
+      if (send_val < 0) {
+          perror("Sending failure");
+          exit(EXIT_FAILURE);
       }
       continue;
     }
