@@ -23,3 +23,5 @@ typedef struct {
 Client_info* make_client_info(struct sockaddr_in client_address, int sock_fd);
 void add_client(Client_info* new_client);
 void send_to_all_clients(char msg[]);
+void send_to_other_clients(char msg[], int sender);
+void send_to_new_client(int client_fd);

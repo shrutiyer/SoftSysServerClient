@@ -1,3 +1,11 @@
+/*
+  SNL (Shruti, Nora, Lucy) Server Client Project
+  Created for Software Systems Project 2
+  Authors: LucyWilcox, nmohamed, shrutiyer
+
+  This is a bash-based chat server.
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,31 +20,71 @@
 Client_info* clients_array[MAX_CLIENTS];   // List of clients in the chat
 int total_clients = 0;
 
+
+/*
+Creates a new client struct
+Inputs: sockaddr stuct, int of the socket file descriptor
+Returns: Client_info* of new client
+*/
 Client_info* make_client_info(struct sockaddr_in client_address, int sock_fd) {
   Client_info* new_client = (Client_info*) malloc(sizeof(Client_info));
   new_client->client_address = client_address;
   new_client->sock_fd = sock_fd;
   new_client->name = malloc(sizeof(char)*USERNAME_SIZE);
-  sprintf(new_client->name, "%d", sock_fd);
+  sprintf(new_client->name, "%d", sock_fd); // set name to socket_fd for now
   return new_client;
 }
 
+/*
+Adds client to client array
+Inputs: Client_info* of client to be added 
+Returns: Nothing
+*/
 void add_client(Client_info* new_client) {
   if (total_clients < MAX_CLIENTS) {
-    clients_array[total_clients] = new_client;
-    total_clients = total_clients+1;
+    clients_array[total_clients] = new_client; // add client to array
+    total_clients = total_clients+1; // increase number of clients
     char msg[23];
-    snprintf(msg, sizeof msg, "New client joined - #%s", new_client->name);
+    snprintf(msg, sizeof msg, "New client joined - #%s\n", new_client->name);
+    send_to_new_client(new_client->sock_fd);
     send_to_all_clients(msg);
   }
 }
 
+/*
+Broadcasts message to all clients connected, for most special messages
+Inputs: char[] of message to be sent
+Returns: Nothing
+*/
 void send_to_all_clients(char msg[]){
   for(int i=0; i<total_clients; i++) {
-    send(clients_array[i]->sock_fd, msg, strlen(msg), 0);
+    send(clients_array[i]->sock_fd, msg, strlen(msg), 0); 
   }
 }
 
+/*
+Broadcasts message to other clients connected, for most normal messages
+Inputs: char[] of message to be sent
+Returns: Nothing
+*/
+void send_to_other_clients(char msg[], int sender){
+  for(int i=0; i<total_clients; i++) {
+    if(clients_array[i]->sock_fd != sender){
+      send(clients_array[i]->sock_fd, msg, strlen(msg), 0); 
+    }
+  }
+}
+
+void send_to_new_client(int client_fd){
+  char msg[BUFFER_SIZE];
+  snprintf(msg, sizeof msg, "~Welcome to the SNL chatroom~\n Type /help for commands\n");
+  send(client_fd, msg, strlen(msg), 0);
+}
+/*
+Code for handling each client thread
+Inputs: Client_info* casts as void*
+Returns: Nothing
+*/
 void* handle_client(void* arg){
   Client_info* client = (Client_info*)(arg);
   int child_fd = client->sock_fd;
@@ -44,9 +92,10 @@ void* handle_client(void* arg){
   char buffer[BUFFER_SIZE] = {0};
 
   while((read_val = read(child_fd, buffer, BUFFER_SIZE-1)) > 0){
-    printf("Client #%i says: %s", child_fd, buffer); // could switch this to the name or from the server's prespective maybe it could just be child_fd
+    printf("Client #%i says: %s", child_fd, buffer);
     char msg[BUFFER_SIZE];
 
+    // change username
     if(!strncmp(buffer, "/name", 5)){
 
       char* old_client_name = malloc(sizeof(char)*USERNAME_SIZE);
@@ -63,38 +112,24 @@ void* handle_client(void* arg){
     } else{
 
       snprintf(msg, sizeof msg, "%s: %s", client->name, buffer);
-      send_to_all_clients(msg);
+      send_to_other_clients(msg, client->sock_fd);
     }
     memset(buffer, 0, BUFFER_SIZE);
   }
   pthread_exit(NULL);
 }
 
-// void* broadcast(void* arg){
-//   while(1){
-//     int child_fd = *(int*)(arg);
-//     char writebuffer[BUFFER_SIZE] = {0};
-//     printf("> ");
-//     fgets(writebuffer, BUFFER_SIZE, stdin);
-//
-//     if(strncmp(writebuffer, "/exit\n", BUFFER_SIZE) == 0){
-//       puts("Exiting now");
-//       exit(0);
-//     }
-//
-//     // send(child_fd, writebuffer, strlen(writebuffer), 0);
-//     // send_to_all_clients(writebuffer);
-//   }
-//   pthread_exit(NULL);
-// }
-
-
+/*
+Main function, sets up server socket and listens, accepts clients
+Inputs: argc argv
+Returns: 0 when closed
+*/
 int main(int argc, char const *argv[]) {
   int parent_fd, child_fd;
   int opt = 1;      // Reuse flag
   struct sockaddr_in server_address, client_address;
-  pthread_t tidc, tidb;
-  int retc, retb;
+  pthread_t tidc;
+  int retc;
 
   parent_fd = socket(AF_INET, SOCK_STREAM, 0);
   if (parent_fd == 0) {
@@ -145,10 +180,7 @@ int main(int argc, char const *argv[]) {
     if (retc != 0) {
       perror("pthread_create failed");
     }
-    // retb = pthread_create(&tidb, NULL, &broadcast, (void*)&child_fd);
-    // if (retb != 0) {
-    //   perror("pthread_create failed");
-    // }
+
     sleep(1);
   }
   close(child_fd);
