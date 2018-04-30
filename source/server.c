@@ -44,10 +44,32 @@ void* handle_client(void* arg){
   char buffer[BUFFER_SIZE] = {0};
 
   while((read_val = read(child_fd, buffer, BUFFER_SIZE-1)) > 0){
+        // Accept files
+
+    if(!strncmp(buffer, "/send ", 6)){
+      // recieve file sizeof
+      char file_size_str[BUFFER_SIZE - 6];
+      strncpy(file_size_str, buffer + 6, BUFFER_SIZE);
+      int file_size = (int) strtol(file_size_str, NULL, 10);
+      printf("\nFile size: *%i*\n", file_size);
+
+      char p_array[file_size];
+      read(child_fd, p_array, file_size);
+
+      // Save recieved file information
+      printf("*");
+      FILE *image;
+      image = fopen("a.png", "w");
+      fwrite(p_array, 1, sizeof(p_array), image);
+      fclose(image);
+      continue;
+    }
+
     printf("Client #%i says: %s", child_fd, buffer); // could switch this to the name or from the server's prespective maybe it could just be child_fd
     char msg[BUFFER_SIZE];
 
-    if(!strncmp(buffer, "/name", 5)){
+    // Change username
+    if(!strncmp(buffer, "/name ", 6)){
 
       char* old_client_name = malloc(sizeof(char)*USERNAME_SIZE);
       strcpy(old_client_name, client->name);
@@ -57,12 +79,12 @@ void* handle_client(void* arg){
       client_name[strlen(client_name)-1] = 0;
       client->name = client_name;
 
-      snprintf(msg, sizeof msg, "client %s is now client %s", old_client_name, client->name);
+      snprintf(msg, sizeof msg, "Client %s is now client %s", old_client_name, client->name);
       send_to_all_clients(msg);
 
-    } else{
-
-      snprintf(msg, sizeof msg, "%s: %s", client->name, buffer);
+    } // Send to all clients
+    else{
+      snprintf(msg, sizeof msg, "Client %s says: %s", client->name, buffer);
       send_to_all_clients(msg);
     }
     memset(buffer, 0, BUFFER_SIZE);
@@ -149,6 +171,7 @@ int main(int argc, char const *argv[]) {
     // if (retb != 0) {
     //   perror("pthread_create failed");
     // }
+
     sleep(1);
   }
   close(child_fd);
