@@ -83,24 +83,29 @@ int main(int argc, char const *argv[]) {
   	      exit(EXIT_FAILURE);
   	  }
 
+      // Denote completion
+
   		// Send file
   		char file_buffer[size];
   		while(!feof(file)) {
+        puts("* ");
         fread(file_buffer, 1, sizeof(file_buffer), file);
-        send_val = write(sock_fd, file_buffer, sizeof(file_buffer));
+        send_val = send(sock_fd, file_buffer, strlen(file_buffer), 0);
         bzero(file_buffer, sizeof(file_buffer));
   			if (send_val < 0) {
   				perror("Sending failure");
   				exit(EXIT_FAILURE);
   			}
       }
-
-      char *completion_message = "send complete";
+      
+      char completion_message[20] = "send complete";
       send_val = send(sock_fd, completion_message, strlen(completion_message), 0);
       if (send_val < 0) {
           perror("Sending failure");
           exit(EXIT_FAILURE);
       }
+
+      fclose(file);
       continue;
     }
 

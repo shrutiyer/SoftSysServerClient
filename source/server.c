@@ -47,13 +47,14 @@ void* handle_client(void* arg){
   int read_val;
   char buffer[BUFFER_SIZE] = {0};
   int send_flag = 0;
-  int file_size;
+  int file_size = BUFFER_SIZE;
 
-  while((read_val = read(child_fd, buffer, BUFFER_SIZE-1)) > 0){
-        // Accept files
+  while((read_val = read(child_fd, buffer, file_size-1)) > 0){
+      printf("Client #%i says: %s", child_fd, buffer); // could switch this to the name or from the server's prespective maybe it could just be child_fd
 
+    // Accept files
     if(!strncmp(buffer, "/send ", 6)){
-      // recieve file sizeof
+      // Recieve size of file
       char file_size_str[BUFFER_SIZE - 6];
       strncpy(file_size_str, buffer + 6, BUFFER_SIZE);
       file_size = (int) strtol(file_size_str, NULL, 10);
@@ -61,43 +62,52 @@ void* handle_client(void* arg){
 
       char p_array[file_size];
       read(child_fd, p_array, file_size);
+      printf("\nSECOND READ #%i says: %s", child_fd, p_array);
+      //
+      // // Save recieved file information
+      // printf("*");
+      // FILE *image;
+      // char actual_file_name[5];
+      // snprintf(actual_file_name, 5, "%i.txt", file_name_number);
+      // image = fopen(actual_file_name, "w");
+      // fwrite(p_array, 1, sizeof(p_array), image);
+      // fclose(image);
+      // send_flag = 1;
 
-      // Save recieved file information
-      printf("*");
-      FILE *image;
-      char actual_file_name[5];
-      snprintf(actual_file_name, 5, "%i.txt", file_name_number);
-      image = fopen(actual_file_name, "w");
-      fwrite(p_array, 1, sizeof(p_array), image);
-      fclose(image);
-      send_flag = 1;
+      memset(buffer, 0, BUFFER_SIZE);
       continue;
     }
 
+    // End file transfer
     if(!strncmp(buffer, "send complete", 13)){
+      puts("\n****AHHHHHHHHHHHHHHHHHHHHHHHH!!!*****\n");
       send_flag = 0;
       file_size = 0;
       file_name_number++;
+      file_size = BUFFER_SIZE;
+
+      memset(buffer, 0, BUFFER_SIZE);
       continue;
     }
 
+    // Save file
     if(send_flag == 1){
-      char p_array[file_size];
-      read(child_fd, p_array, file_size);
+      // char p_array[file_size];
+      // read(child_fd, p_array, file_size);
 
       // Save recieved file information
       printf("*");
       FILE *image;
       char actual_file_name[5];
-      snprintf(actual_file_name, 5, "%i.txt", file_name_number);
+      snprintf(actual_file_name, 6, "%i.txt", file_name_number);
       image = fopen(actual_file_name, "w");
-      fwrite(p_array, 1, sizeof(p_array), image);
+      fwrite(buffer, 1, sizeof(buffer), image);
       fclose(image);
-      send_flag = 1;
+
+      memset(buffer, 0, BUFFER_SIZE);
       continue;
     }
 
-    printf("Client #%i says: %s", child_fd, buffer); // could switch this to the name or from the server's prespective maybe it could just be child_fd
     char msg[BUFFER_SIZE];
 
     // Change username
