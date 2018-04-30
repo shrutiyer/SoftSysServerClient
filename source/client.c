@@ -52,7 +52,6 @@ void* handle_server(void* arg) {
   pthread_exit(NULL);
 }
 
-<<<<<<< HEAD
 static void init_ncurses(void) {
 	initscr();
 	cbreak();
@@ -76,13 +75,11 @@ void end_ncurses(void) {
   endwin();
 }
 
-=======
 /*
 Main function, connects to server, waits for user input and sends to server
 Input: argc, argv
 Returns: 0 when done
 */
->>>>>>> 93c152101d278e976c2021122396bdaafb820025
 int main(int argc, char const *argv[]) {
   int sock_fd;
   struct sockaddr_in server_address;
@@ -119,15 +116,6 @@ int main(int argc, char const *argv[]) {
       puts("exiting....");
       end_ncurses();
       exit(0);
-<<<<<<< HEAD
-    }
-
-    int send_val = send(sock_fd, msg_from_client, strlen(msg_from_client), 0);
-
-    if (send_val < 0) {
-      perror("Sending failure");
-      exit(EXIT_FAILURE);
-=======
     } else if(strncmp(msg_from_client, "/help\n", BUFFER_SIZE) == 0){
       puts("~~~~~~~~~~~~~~~");
       puts("~Welcome to the SNL chatroom~");
@@ -141,7 +129,6 @@ int main(int argc, char const *argv[]) {
         perror("Sending failure");
         exit(EXIT_FAILURE);
       }
->>>>>>> 93c152101d278e976c2021122396bdaafb820025
     }
   }
 
