@@ -12,7 +12,7 @@
 
 #define PORT 80
 #define BUFFER_SIZE 1024
-#define KEY_ENTER 13
+#define ENTER_KEY 10
 
 WINDOW *user_input, *chat_window;
 
@@ -34,7 +34,7 @@ static void init_ncurses(void) {
 	initscr();
 	cbreak();
   clear();
-	noecho();
+	//noecho();
 
   int x_max, y_max;
   getmaxyx(stdscr, y_max, x_max);
@@ -80,24 +80,18 @@ int main(int argc, char const *argv[]) {
   pthread_create(&tid, NULL, &handle_server, (void*)&sock_fd);
   while(1) {
     char msg_from_client[BUFFER_SIZE] = {0};
-    mvwprintw(user_input, 1, 1,">");
+    mvwprintw(user_input, 1, 1, ">");
     wrefresh(user_input);
-    // fgets(msg_from_client, BUFFER_SIZE, stdin);
-    int ch = 0, x = 1, y = 1;
-		while(ch != KEY_ENTER)
-		{
-      ch = wgetch(user_input);
-			mvwprintw(user_input, y, x, "%c", ch);
-			wrefresh(user_input);
-			++x;
-		}
+    wgetstr(user_input, msg_from_client);
 
     if(strncmp(msg_from_client, "/exit\n", BUFFER_SIZE) == 0){
       puts("exiting....");
       end_ncurses();
       exit(0);
     }
+
     int send_val = send(sock_fd, msg_from_client, strlen(msg_from_client), 0);
+    //wclear(user_input);
     if (send_val < 0) {
       perror("Sending failure");
       exit(EXIT_FAILURE);
