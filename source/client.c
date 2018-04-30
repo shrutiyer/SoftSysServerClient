@@ -73,6 +73,8 @@ int main(int argc, char const *argv[]) {
     if(strncmp(msg_from_client, "/exit\n", BUFFER_SIZE) == 0){
       puts("exiting....");
       exit(0);
+    } else if(strncmp(msg_from_client, "/exit\n", BUFFER_SIZE) == 0){
+      puts("Welcome to the");
     }
     int send_val = send(sock_fd, msg_from_client, strlen(msg_from_client), 0);
     if (send_val < 0) {
