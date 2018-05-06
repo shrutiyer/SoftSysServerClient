@@ -37,7 +37,7 @@ Client_info* make_client_info(struct sockaddr_in client_address, int sock_fd) {
 
 /*
 Adds client to client array
-Inputs: Client_info* of client to be added 
+Inputs: Client_info* of client to be added
 Returns: Nothing
 */
 void add_client(Client_info* new_client) {
@@ -58,7 +58,7 @@ Returns: Nothing
 */
 void send_to_all_clients(char msg[]){
   for(int i=0; i<total_clients; i++) {
-    send(clients_array[i]->sock_fd, msg, strlen(msg), 0); 
+    send(clients_array[i]->sock_fd, msg, strlen(msg), 0);
   }
 }
 
@@ -70,14 +70,16 @@ Returns: Nothing
 void send_to_other_clients(char msg[], int sender){
   for(int i=0; i<total_clients; i++) {
     if(clients_array[i]->sock_fd != sender){
-      send(clients_array[i]->sock_fd, msg, strlen(msg), 0); 
+      send(clients_array[i]->sock_fd, msg, strlen(msg), 0);
     }
   }
 }
 
 void send_to_new_client(int client_fd){
   char msg[BUFFER_SIZE];
-  snprintf(msg, sizeof msg, "~Welcome to the SNL chatroom~\n Type /help for commands\n");
+  snprintf(msg, sizeof msg, "~Welcome to the SNL chatroom~\n");
+  send(client_fd, msg, strlen(msg), 0);
+  snprintf(msg, sizeof msg, "Type /help for commands\n");
   send(client_fd, msg, strlen(msg), 0);
 }
 /*

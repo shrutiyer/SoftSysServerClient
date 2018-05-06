@@ -16,9 +16,14 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <pthread.h>
+#include <ncurses.h>
 
 #define PORT 80
 #define BUFFER_SIZE 1024
+#define ENTER_KEY 10
+
+WINDOW *user_input, *chat_window;
+int x_max, y_max;
 
 /*
 Thread that handles server and prints incoming messages
@@ -29,13 +34,57 @@ void* handle_server(void* arg) {
   int sock_fd = *(int*)arg;
   char buffer[BUFFER_SIZE] = {0};
   int read_val;
+  int y = 1;
 
   while ((read_val = read(sock_fd, buffer, BUFFER_SIZE)) > 0) {
-
-    printf("%s\n", buffer);
+    if (y < y_max-9) {
+      // Print the next line of message
+      mvwprintw(chat_window, y, 1,"%s\n", buffer);
+    } else {
+      // Clear the chat window
+      wmove(chat_window, 1, 1);
+      werase(chat_window);
+      box(chat_window, 0, 0);
+      y = 0;
+    }
+    ++y;
+    wrefresh(chat_window);  // Update the window
     memset(buffer, 0, BUFFER_SIZE);
   }
   pthread_exit(NULL);
+}
+
+/*
+  Initializes the two windows for ncurses
+  Inputs: Nothing
+  Returns: Nothing
+*/
+static void init_ncurses(void) {
+	initscr();
+	cbreak();
+  clear();
+
+  getmaxyx(stdscr, y_max, x_max);
+
+  user_input = newwin(3, x_max-12, y_max-5, 5);
+  box(user_input, 0, 0);
+  wrefresh(user_input);
+  keypad(user_input, true);
+
+  chat_window = newwin(y_max-8, x_max-12, 3, 5);
+  scrollok(stdscr, TRUE);
+  box(chat_window, 0, 0);
+  wrefresh(chat_window);
+}
+
+/*
+  Cleanly ends the two windows for ncurses
+  Inputs: Nothing
+  Returns: Nothing
+*/
+void end_ncurses(void) {
+  getch();
+  endwin();
 }
 
 /*
@@ -47,6 +96,7 @@ int main(int argc, char const *argv[]) {
   int sock_fd;
   struct sockaddr_in server_address;
 
+  init_ncurses();
   sock_fd = socket(AF_INET, SOCK_STREAM, 0);
   if (sock_fd < 0) {
     perror("Socket creation error");
@@ -55,7 +105,7 @@ int main(int argc, char const *argv[]) {
 
   memset(&server_address, 0, sizeof(server_address)); // clear address
   server_address.sin_family = AF_INET;
-  server_address.sin_addr.s_addr = inet_addr("192.168.33.215"); //ip of server
+  //server_address.sin_addr.s_addr = inet_addr("192.168.33.215"); //ip of server
   server_address.sin_port = htons(PORT);
 
   int connect_val = connect(sock_fd, (const struct sockaddr *)&server_address, sizeof(server_address));
@@ -68,10 +118,16 @@ int main(int argc, char const *argv[]) {
   pthread_create(&tid, NULL, &handle_server, (void*)&sock_fd);
   while(1) {
     char msg_from_client[BUFFER_SIZE] = {0};
-    printf("> ");
-    fgets(msg_from_client, BUFFER_SIZE, stdin);
+    mvwprintw(user_input, 1, 1, ">");
+    wrefresh(user_input);
+    // Read the user input and then clear the window
+    wgetstr(user_input, msg_from_client);
+    wmove(user_input, 1, 1);
+    wclrtoeol(user_input);
+
     if(strncmp(msg_from_client, "/exit\n", BUFFER_SIZE) == 0){
-      puts("exiting....");
+      puts("Exiting...");
+      end_ncurses();
       exit(0);
     } else if(strncmp(msg_from_client, "/help\n", BUFFER_SIZE) == 0){
       puts("~~~~~~~~~~~~~~~");
