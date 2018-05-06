@@ -38,20 +38,27 @@ void* handle_server(void* arg) {
 
   while ((read_val = read(sock_fd, buffer, BUFFER_SIZE)) > 0) {
     if (y < y_max-9) {
+      // Print the next line of message
       mvwprintw(chat_window, y, 1,"%s\n", buffer);
     } else {
+      // Clear the chat window
       wmove(chat_window, 1, 1);
       werase(chat_window);
       box(chat_window, 0, 0);
       y = 0;
     }
     ++y;
-    wrefresh(chat_window);
+    wrefresh(chat_window);  // Update the window
     memset(buffer, 0, BUFFER_SIZE);
   }
   pthread_exit(NULL);
 }
 
+/*
+  Initializes the two windows for ncurses
+  Inputs: Nothing
+  Returns: Nothing
+*/
 static void init_ncurses(void) {
 	initscr();
 	cbreak();
@@ -70,6 +77,11 @@ static void init_ncurses(void) {
   wrefresh(chat_window);
 }
 
+/*
+  Cleanly ends the two windows for ncurses
+  Inputs: Nothing
+  Returns: Nothing
+*/
 void end_ncurses(void) {
   getch();
   endwin();
@@ -93,7 +105,7 @@ int main(int argc, char const *argv[]) {
 
   memset(&server_address, 0, sizeof(server_address)); // clear address
   server_address.sin_family = AF_INET;
-  server_address.sin_addr.s_addr = inet_addr("192.168.33.215"); //ip of server
+  //server_address.sin_addr.s_addr = inet_addr("192.168.33.215"); //ip of server
   server_address.sin_port = htons(PORT);
 
   int connect_val = connect(sock_fd, (const struct sockaddr *)&server_address, sizeof(server_address));
@@ -108,12 +120,13 @@ int main(int argc, char const *argv[]) {
     char msg_from_client[BUFFER_SIZE] = {0};
     mvwprintw(user_input, 1, 1, ">");
     wrefresh(user_input);
+    // Read the user input and then clear the window
     wgetstr(user_input, msg_from_client);
     wmove(user_input, 1, 1);
     wclrtoeol(user_input);
 
     if(strncmp(msg_from_client, "/exit\n", BUFFER_SIZE) == 0){
-      puts("exiting....");
+      puts("Exiting...");
       end_ncurses();
       exit(0);
     } else if(strncmp(msg_from_client, "/help\n", BUFFER_SIZE) == 0){
