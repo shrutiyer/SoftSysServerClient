@@ -114,7 +114,7 @@ void* handle_client(void* arg){
     } else{
 
       snprintf(msg, sizeof msg, "%s: %s", client->name, buffer);
-      send_to_other_clients(msg, client->sock_fd);
+      send_to_all_clients(msg, client->sock_fd);
     }
     memset(buffer, 0, BUFFER_SIZE);
   }
