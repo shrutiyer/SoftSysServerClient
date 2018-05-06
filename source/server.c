@@ -105,7 +105,7 @@ void* handle_client(void* arg){
       char* client_name = malloc(sizeof(char)*USERNAME_SIZE);
       strcpy(client_name, buffer);
       client_name = client_name + 6;
-      client_name[strlen(client_name)-1] = 0;
+      // client_name[strlen(client_name)-1] = 0;
       client->name = client_name;
 
       snprintf(msg, sizeof msg, "client %s is now client %s", old_client_name, client->name);
@@ -114,7 +114,7 @@ void* handle_client(void* arg){
     } else{
 
       snprintf(msg, sizeof msg, "%s: %s", client->name, buffer);
-      send_to_all_clients(msg, client->sock_fd);
+      send_to_all_clients(msg);
     }
     memset(buffer, 0, BUFFER_SIZE);
   }
